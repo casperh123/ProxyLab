@@ -2,6 +2,7 @@ CC = gcc
 CFLAGS = -g -Wall
 LDFLAGS = -lpthread
 
+
 all: proxy
 
 http.o: http.c http.h
@@ -20,7 +21,7 @@ cache.o : cache.c proxy.h
 	$(CC) $(CFLAGS) -c cache.c
 
 proxy: proxy.o error.o io.o http.o cache.o
-	$(CC) $(CFLAGS) error.o io.o http.o proxy.o -o proxy $(LDFLAGS)
+	$(CC) $(CFLAGS) cache.o error.o io.o http.o proxy.o -o proxy $(LDFLAGS)
 
 clean:
 	rm -f *~ *.o proxy core *.tar *.zip *.gzip *.bzip *.gz

@@ -17,12 +17,19 @@
 #include "error.h" // error reporting for ^
 #include "http.h"  // http-related things for ^
 #include "io.h"    // io-related things for ^
+#include "cache.h"
 #include <pthread.h>
-
-
 
 int main(int argc, char **argv) {
     int listen_fd; // fd for connection requests from clients.
+
+    cache cache = {
+        .head = NULL,
+        .tail = NULL,
+        .max_object_size = MAX_OBJECT_SIZE,
+        .max_size = MAX_CACHE_SIZE,
+        .size = 0
+    };
 
     /* Check command line args for presence of a port number. */
     if (error_args_fatal(argc, argv)) { exit(1); }
@@ -32,13 +39,13 @@ int main(int argc, char **argv) {
 
     /* Handle connection requests. */
     while (1) {
-        handle_connection_request(listen_fd);
+        handle_connection_request(listen_fd, &cache);
     }
 
     return 0; // Indicates "no error" (although this is never reached).
 }
 
-void handle_connection_request(int listen_fd) {
+void handle_connection_request(int listen_fd, cache *cache) {
     int client_fd; // fd for clients that connect.
 
     printf("\e[1mawaiting connection request...\e[0m\n");
@@ -50,32 +57,34 @@ void handle_connection_request(int listen_fd) {
     if (error_accept_fatal(client_fd)) { exit(1); }
     if (error_accept(client_fd)) { return; }
 
-    int *client_fd_ptr = malloc(sizeof(int));
-    *client_fd_ptr = client_fd;
+    request_scope *scope_ptr = malloc(sizeof(struct request_scope));
+
+    scope_ptr->cache = cache;
+    scope_ptr->client_fd = client_fd;
 
     pthread_t tid;
     pthread_attr_t attr;
 
     pthread_attr_init(&attr);
     pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
-    pthread_create(&tid, &attr, thread_handle_request, client_fd_ptr);
+    pthread_create(&tid, &attr, thread_handle_request, scope_ptr);
 }
 
 void thread_handle_request(void *arg) {
     printf("Begin processing request - Spawning new thread\n");
 
-    int client_fd = *(int *) arg;
+    request_scope *scope = (request_scope *) arg;
     int return_cd;
 
-    handle_request(client_fd);
+    handle_request(scope);
 
-    return_cd = close(client_fd);
+    return_cd = close(scope->client_fd);
     if (error_close(return_cd)) {
         /* ignore */
     }
 }
 
-void handle_request(int client_fd) {
+void handle_request(struct request_scope *scope) {
     printf("SUCCESS WITH THREAD, REACHED REAL HANDLE REQUEST\n");
 
     int server_fd; // server file descriptor
@@ -90,6 +99,7 @@ void handle_request(int client_fd) {
     char port[MAX_LINE];
     char request_hdr[MAX_LINE];
 
+    int client_fd = scope->client_fd;
     int return_cd;
     ssize_t num_bytes;
 
@@ -104,35 +114,43 @@ void handle_request(int client_fd) {
     /* Ignore non-GET requests (your proxy is only tested on GET requests). */
     if (error_non_get(method)) { return; }
 
-    /* Parse URI from GET request */
-    parse_uri(uri, hostname, path, port);
+    int key = 0;
 
-    /* Set the request header */
-    return_cd = set_request_header(request_hdr, hostname, path, port, client_fd);
-    if (error_header(return_cd)) { return; }
+    int cache_hit = cache_get(scope->cache, key);
 
-    /* Create the server fd. */
-    server_fd = create_server_fd(hostname, port);
-    if (error_socket_server(server_fd)) { return; }
+    if(cache_hit < 0) {
+        num_bytes = cache_hit;
+    } else {
+        /* Parse URI from GET request */
+        parse_uri(uri, hostname, path, port);
 
-    /* Write the request (header) to the server. */
-    return_cd = write_all(server_fd, request_hdr, strlen(request_hdr));
-    if (error_write_server(server_fd, return_cd)) { return; }
+        /* Set the request header */
+        return_cd = set_request_header(request_hdr, hostname, path, port, client_fd);
+        if (error_header(return_cd)) { return; }
 
-    do {
-        num_bytes = read(server_fd, buf, MAX_LINE);
+        /* Create the server fd. */
+        server_fd = create_server_fd(hostname, port);
+        if (error_socket_server(server_fd)) { return; }
 
-        if (error_read_server(server_fd, num_bytes)) {
-            return;
-        }
+        /* Write the request (header) to the server. */
+        return_cd = write_all(server_fd, request_hdr, strlen(request_hdr));
+        if (error_write_server(server_fd, return_cd)) { return; }
 
-        num_bytes = write_all(client_fd, buf, num_bytes);
+        do {
+            num_bytes = read(server_fd, buf, MAX_LINE);
 
-        if (error_write_client(client_fd, num_bytes)) {
-            return;
-        }
+            if (error_read_server(server_fd, num_bytes)) {
+                return;
+            }
 
-    } while (num_bytes > 0);
+            num_bytes = write_all(client_fd, buf, num_bytes);
+
+            if (error_write_client(client_fd, num_bytes)) {
+                return;
+            }
+
+        } while (num_bytes > 0);
+    }
 
     /* success; close the file descrpitor. */
     return_cd = close(server_fd);
