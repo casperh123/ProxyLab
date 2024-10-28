@@ -1,6 +1,6 @@
 /**
  * TODO: fill in your name and ITU alias
- * @author FIRSTNAME LASTNAME <ALIAS@itu.dk>
+ * @author Casper Holten <casho@itu.dk>
  */
 
 #include <sys/socket.h>
