@@ -40,7 +40,6 @@ int main(int argc, char **argv) {
 
 void handle_connection_request(int listen_fd) {
     int client_fd; // fd for clients that connect.
-    int return_cd; // return- (aka. error-) code of function calls.
 
     printf("\e[1mawaiting connection request...\e[0m\n");
 
@@ -56,25 +55,20 @@ void handle_connection_request(int listen_fd) {
 
     pthread_t tid;
     pthread_create(&tid, NULL, thread_handle_request, client_fd_ptr);
-
-    pthread_join(tid, NULL);
-
-    /* "Kernel, we done handling request; close fd." (errors ignored; see man page)
-       https://man7.org/linux/man-pages/man2/close.2.html (a system call) */
-    return_cd = close(client_fd);
-    if (error_close(return_cd)) {
-        /* ignore */
-    }
-
-    printf("\e[1mfinished processing request.\e[0m\n");
 }
 
 void thread_handle_request(void *arg) {
     printf("Begin processing request - Spawning new thread\n");
 
-    int cliend_fd = *(int *) arg;
-    
-    handle_request(cliend_fd);
+    int client_fd = *(int *) arg;
+    int return_cd;
+
+    handle_request(client_fd);
+
+    return_cd = close(client_fd);
+    if (error_close(return_cd)) {
+        /* ignore */
+    }
 }
 
 void handle_request(int client_fd) {
