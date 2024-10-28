@@ -6,7 +6,7 @@ You might need to run the following to clean out old object files.
 
     make clean
 
-Running the proxy (on cos):
+Running the proxy:
 
     ./proxy <port_number>
 
@@ -14,6 +14,9 @@ Instead of your browser, you can use the following command-line tool to test you
 
     curl -v --proxy http://localhost:5000 http://google.com
 
+Run Tests:
+
+    ../pxedrive24/pxy/pxydrive.py -f ../pxedrive24/s01*.cmd -S 3 -p ./proxy
 
 
 Suppose you have cloned the Pxedrive repository to the same location that you have cloned the syslab repository. Then, inside your syslab repository, you can run pxedrive to test your proxy as follows:
