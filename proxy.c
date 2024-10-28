@@ -115,13 +115,6 @@ void handle_request(int client_fd) {
     return_cd = write_all(server_fd, request_hdr, strlen(request_hdr));
     if (error_write_server(server_fd, return_cd)) { return; }
 
-    /* Transfer the response from the server, to the client.
-       (until server responds with EOF). */
-    /* TODO insert code here! (ballpark: 6 lines +/-)
-       working solution is in p1-sol.txt
-       try writing your own code; use p1-sol.txt only
-       if you are hard-stuck! */
-
     do {
         num_bytes = read(server_fd, buf, MAX_LINE);
 

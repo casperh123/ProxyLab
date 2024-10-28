@@ -16,7 +16,10 @@ io.o: io.c io.h
 proxy.o: proxy.c proxy.h
 	$(CC) $(CFLAGS) -c proxy.c
 
-proxy: proxy.o error.o io.o http.o
+cache.o : cache.c proxy.h
+	$(CC) $(CFLAGS) -c cache.c
+
+proxy: proxy.o error.o io.o http.o cache.o
 	$(CC) $(CFLAGS) error.o io.o http.o proxy.o -o proxy $(LDFLAGS)
 
 clean:
