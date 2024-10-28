@@ -54,7 +54,11 @@ void handle_connection_request(int listen_fd) {
     *client_fd_ptr = client_fd;
 
     pthread_t tid;
-    pthread_create(&tid, NULL, thread_handle_request, client_fd_ptr);
+    pthread_attr_t attr;
+
+    pthread_attr_init(&attr);
+    pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_DETACHED);
+    pthread_create(&tid, &attr, thread_handle_request, client_fd_ptr);
 }
 
 void thread_handle_request(void *arg) {
