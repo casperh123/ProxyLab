@@ -8,6 +8,7 @@
 #endif/*MAX_LINE*/
 
 void handle_request ( int fd );
+void thread_handle_request(void *arg);
 int  create_listen_fd ( int port);
 void handle_connection_request ( int listen_fd );
 void get_client_socket_address ( struct sockaddr *client_addr, char *hostname, char *port);

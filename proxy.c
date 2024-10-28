@@ -17,6 +17,8 @@
 #include "error.h" // error reporting for ^
 #include "http.h"  // http-related things for ^
 #include "io.h"    // io-related things for ^
+#include <pthread.h>
+
 
 
 int main(int argc, char **argv) {
@@ -49,8 +51,13 @@ void handle_connection_request(int listen_fd) {
     if (error_accept_fatal(client_fd)) { exit(1); }
     if (error_accept(client_fd)) { return; }
 
-    /* Handle (presumably, a HTTP GET) request. */
-    handle_request(client_fd);
+    int *client_fd_ptr = malloc(sizeof(int));
+    *client_fd_ptr = client_fd;
+
+    pthread_t tid;
+    pthread_create(&tid, NULL, thread_handle_request, client_fd_ptr);
+
+    pthread_join(tid, NULL);
 
     /* "Kernel, we done handling request; close fd." (errors ignored; see man page)
        https://man7.org/linux/man-pages/man2/close.2.html (a system call) */
@@ -62,7 +69,17 @@ void handle_connection_request(int listen_fd) {
     printf("\e[1mfinished processing request.\e[0m\n");
 }
 
+void thread_handle_request(void *arg) {
+    printf("Begin processing request - Spawning new thread\n");
+
+    int cliend_fd = *(int *) arg;
+    
+    handle_request(cliend_fd);
+}
+
 void handle_request(int client_fd) {
+    printf("SUCCESS WITH THREAD, REACHED REAL HANDLE REQUEST\n");
+
     int server_fd; // server file descriptor
 
     /* String variables */
