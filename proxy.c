@@ -118,8 +118,14 @@ void handle_request(struct request_scope *scope) {
 
     int cache_hit = cache_get(scope->cache, key);
 
-    if(cache_hit < 0) {
+    if(cache_hit > 0) {
         num_bytes = cache_hit;
+
+        num_bytes = write_all(client_fd, buf, num_bytes);
+
+        if (error_write_client(client_fd, num_bytes)) {
+            return;
+        }
     } else {
         /* Parse URI from GET request */
         parse_uri(uri, hostname, path, port);
