@@ -120,7 +120,7 @@ void handle_request(struct request_scope *scope) {
     int cache_hit = cache_get(scope->cache, key);
 
     if(cache_hit > 0) {
-        printf("\033[32mCACHE HIT:\033[32m\n");
+        printf("\033[33mCACHE HIT:\033[0m %s\n", uri);
 
         num_bytes = cache_hit;
 
