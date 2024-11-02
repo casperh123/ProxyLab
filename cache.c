@@ -48,13 +48,48 @@ cache_node* cache_get(cache *cache, int key) {
   return NULL;
 }
 
-int cache_put(cache *cache, int key, int data) {
+int cache_put(cache *cache, int key, char *data) {
 
-    cache_node* cache_entry = cache_get(cache, key);
+    cache_node new_entry = {
+        .next = NULL,
+        .previous = NULL,
+        .key = key,
+        .data = data,
+        .size = cache->buffer_size
+    };
 
-    if(cache_entry == NULL) {
+    cache_node* node = &new_entry;
 
+    cache->tail->next = NULL;
+    cache->tail = NULL;
+    cache->head->previous = node;
+    node->next = cache->head;
+    cache->head = node;
+
+    return node;
+}
+
+int append_data(cache_node, char* data) {
+
+}
+
+//TODO implement cases for head, tail and middle
+int cache_remove(cache* cache, int key)  {
+
+    cache_node* current = cache->head;
+    cache_node* previous = NULL;
+
+    while(current != NULL) {
+        if(current->key == key) {
+            previous->next = current->next;
+            current->next->previous = previous;
+
+            return 0;
+        }
+
+        previous = current;
+        current = current->next;
     }
 
-
+    return -1;
 }

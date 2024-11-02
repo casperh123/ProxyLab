@@ -27,9 +27,10 @@ int main(int argc, char **argv) {
     cache cache = {
         .head = NULL,
         .tail = NULL,
-        .max_object_size = MAX_OBJECT_SIZE,
+        .size = 0,
         .max_size = MAX_CACHE_SIZE,
-        .size = 0
+        .max_object_size = MAX_OBJECT_SIZE,
+        .buffer_size = MAX_LINE
     };
 
     /* Check command line args for presence of a port number. */
