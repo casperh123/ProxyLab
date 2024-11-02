@@ -117,14 +117,15 @@ void handle_request(struct request_scope *scope) {
     if (error_non_get(method)) { return; }
 
     int key = hash(uri);
-    int cache_hit = cache_get(scope->cache, key);
+    cache_node* cache_hit = cache_get(scope->cache, key);
 
-    if(cache_hit > 0) {
+    if(cache_hit != NULL) {
         printf("\033[33mCACHE HIT:\033[0m %s\n", uri);
 
-        num_bytes = cache_hit;
+        num_bytes = cache_hit->size;
+        num_bytes = write_all(client_fd, cache_hit->data, num_bytes);
 
-        num_bytes = write_all(client_fd, buf, num_bytes);
+        printf("\033[33mCACHE HIT:\033[0m Wrote some bytes to: %s\n", uri);
 
         if (error_write_client(client_fd, num_bytes)) {
             return;

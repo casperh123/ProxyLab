@@ -18,7 +18,7 @@ typedef struct cache {
     size_t max_object_size;
 } cache;
 
-int cache_get(cache *cache, int key);
+cache_node* cache_get(cache *cache, int key);
 int cache_put(cache *cache, int key, int data);
 
 #endif // CACHE_H

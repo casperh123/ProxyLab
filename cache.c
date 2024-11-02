@@ -5,7 +5,7 @@
 #include "cache.h"
 #include <string.h>
 
-cache_node cache_get(cache *cache, int key) {
+cache_node* cache_get(cache *cache, int key) {
 
   cache_node *current = cache->head;
   cache_node *previous = NULL;
@@ -20,7 +20,7 @@ cache_node cache_get(cache *cache, int key) {
 
         //Already at the head. No Need to rearrange.
         if (current == cache->head) {
-            return current->value;
+            return current;
         }
 
         //Detach current from previous next, and set previous next to next element in list.
@@ -39,8 +39,7 @@ cache_node cache_get(cache *cache, int key) {
         cache->head->previous = current;
         cache->head = current;
 
-
-        return current->value;
+        return current;
     }
 
     current = current->next;
@@ -49,4 +48,13 @@ cache_node cache_get(cache *cache, int key) {
   return NULL;
 }
 
-int cache_put(cache *cache, int key, int data);
+int cache_put(cache *cache, int key, int data) {
+
+    cache_node* cache_entry = cache_get(cache, key);
+
+    if(cache_entry == NULL) {
+
+    }
+
+
+}
