@@ -18,6 +18,7 @@
 #include "http.h"  // http-related things for ^
 #include "io.h"    // io-related things for ^
 #include "cache.h"
+#include "hash.h"
 #include <pthread.h>
 
 int main(int argc, char **argv) {
@@ -79,6 +80,7 @@ void thread_handle_request(void *arg) {
     handle_request(scope);
 
     return_cd = close(scope->client_fd);
+
     if (error_close(return_cd)) {
         /* ignore */
     }
@@ -114,11 +116,12 @@ void handle_request(struct request_scope *scope) {
     /* Ignore non-GET requests (your proxy is only tested on GET requests). */
     if (error_non_get(method)) { return; }
 
-    int key = 0;
-
+    int key = hash(uri);
     int cache_hit = cache_get(scope->cache, key);
 
     if(cache_hit > 0) {
+        printf("\033[32mCACHE HIT:\033[32m\n");
+
         num_bytes = cache_hit;
 
         num_bytes = write_all(client_fd, buf, num_bytes);
@@ -127,6 +130,8 @@ void handle_request(struct request_scope *scope) {
             return;
         }
     } else {
+        printf("\033[33mCACHE MISS:\033[0m %s\n", uri);
+
         /* Parse URI from GET request */
         parse_uri(uri, hostname, path, port);
 
@@ -247,9 +252,7 @@ int create_server_fd(char *hostname, char *port) {
     for (curr_ai = cand_ai; curr_ai != NULL; curr_ai = curr_ai->ai_next) {
         /* "Kernel, make me a socket." (for curr_ai)
            https://man7.org/linux/man-pages/man2/socket.2.html (a system call) */
-        printf("HERE\n");
         server_fd = socket(curr_ai->ai_family, curr_ai->ai_socktype, curr_ai->ai_protocol);
-        printf("HERE\n");
         if (server_fd == -1)
             continue; // try the next ai.
 

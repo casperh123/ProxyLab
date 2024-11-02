@@ -20,8 +20,11 @@ proxy.o: proxy.c proxy.h
 cache.o : cache.c proxy.h
 	$(CC) $(CFLAGS) -c cache.c
 
-proxy: proxy.o error.o io.o http.o cache.o
-	$(CC) $(CFLAGS) cache.o error.o io.o http.o proxy.o -o proxy $(LDFLAGS)
+hash.o : hash.c hash.h
+	$(CC) $(CFLAGS) -c hash.c
+
+proxy: proxy.o error.o io.o http.o cache.o hash.o
+	$(CC) $(CFLAGS) cache.o error.o io.o http.o hash.o proxy.o -o proxy $(LDFLAGS)
 
 clean:
 	rm -f *~ *.o proxy core *.tar *.zip *.gzip *.bzip *.gz

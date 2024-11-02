@@ -15,4 +15,6 @@ add_executable(ProxyLab
     io.c
     io.h
     proxy.c
-    proxy.h)
+    proxy.h
+        hash.h
+        hash.c)

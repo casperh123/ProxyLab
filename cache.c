@@ -7,3 +7,5 @@
 int cache_get(cache *cache, int key) {
     return -1;
 }
+
+int cache_put(cache *cache, int key, int data);
