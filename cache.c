@@ -103,8 +103,22 @@ int cache_remove(cache* cache, int key)  {
 
     while(current != NULL) {
         if(current->key == key) {
-            previous->next = current->next;
-            current->next->previous = previous;
+
+            if(current->previous == NULL && current->next == NULL) {
+                cache->head = NULL;
+                cache->tail = NULL;
+            } else if (current->next == NULL) {
+                previous->next = NULL;
+                cache->tail = previous;
+            } else if (current->previous == NULL) {
+                cache->head = current->next;
+                current->next->previous = NULL;
+            } else {
+                current->next->previous = previous;
+                previous->next = current->next;
+            }
+
+            free(current);
 
             return 0;
         }
