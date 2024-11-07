@@ -19,9 +19,10 @@ typedef struct cache {
     size_t buffer_size;
 } cache;
 
-cache_node* cache_get(cache *cache, int key);
-cache_node* cache_put(cache *cache, int key, char *data);
-int cache_append(cache_node node, char *data);
-int cache_remove(cache* cache, int key);
+char* cache_get(cache *cache, int key);
+int cache_put(cache *cache, int key, char *data, size_t data_size);
+int cache_append(cache *cache, cache_node *node);
+int cache_prepend(cache_node *node);
+int cache_remove(cache *cache, int key);
 
 #endif // CACHE_H
