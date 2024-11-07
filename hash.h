@@ -7,4 +7,4 @@
 
 #endif //HASH_H
 
-int hash(char *str);
+unsigned int hash(const char* url);

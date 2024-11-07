@@ -118,12 +118,12 @@ void handle_request(struct request_scope *scope) {
     if (error_non_get(method)) { return; }
 
     int key = hash(uri);
-    char* cache_hit = cache_get(scope->cache, key);
+    cache_node* cache_hit = cache_get(scope->cache, key);
 
     if(cache_hit != NULL) {
         printf("\033[33mCACHE HIT:\033[0m %s\n", uri);
 
-        num_bytes = write_all(client_fd, cache_hit, num_bytes);
+        num_bytes = write_all(client_fd, cache_hit->data, cache_hit->size);
 
         printf("\033[33mCACHE HIT:\033[0m Wrote some bytes to: %s\n", uri);
 
@@ -149,24 +149,36 @@ void handle_request(struct request_scope *scope) {
         return_cd = write_all(server_fd, request_hdr, strlen(request_hdr));
         if (error_write_server(server_fd, return_cd)) { return; }
 
+        char* response_buffer = malloc(MAX_OBJECT_SIZE);
+        size_t response_size = 0;
+
         do {
             num_bytes = read(server_fd, buf, MAX_LINE);
-
             if (error_read_server(server_fd, num_bytes)) {
+                free(response_buffer);
                 return;
             }
 
-            int url_hash = hash(uri);
-
-            cache_put(scope->cache, url_hash, buf, num_bytes);
-
+            //Always write to client first
             num_bytes = write_all(client_fd, buf, num_bytes);
-
             if (error_write_client(client_fd, num_bytes)) {
+                free(response_buffer);
                 return;
             }
 
+            //Only cache if we haven't exceeded size
+            if(response_size + num_bytes <= MAX_OBJECT_SIZE) {
+                memcpy(response_buffer + response_size, buf, num_bytes);
+                response_size += num_bytes;
+            }
         } while (num_bytes > 0);
+
+        //Only cache if we got everything
+        if (response_size <= MAX_OBJECT_SIZE) {
+            cache_put(scope->cache, key, response_buffer, response_size);
+        }
+
+        free(response_buffer);
     }
 
     /* success; close the file descrpitor. */

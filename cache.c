@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-char* cache_get(cache *cache, int key) {
+cache_node* cache_get(cache *cache, int key) {
 
   cache_node *current = cache->head;
   cache_node *previous = NULL;
@@ -22,7 +22,7 @@ char* cache_get(cache *cache, int key) {
 
         //Already at the head. No Need to rearrange.
         if (current == cache->head) {
-            return current->data;
+            return current;
         }
 
         //Detach current from previous next, and set previous next to next element in list.
@@ -41,7 +41,7 @@ char* cache_get(cache *cache, int key) {
         cache->head->previous = current;
         cache->head = current;
 
-        return current->data;
+        return current;
     }
 
     current = current->next;
