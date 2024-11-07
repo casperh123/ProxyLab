@@ -52,10 +52,16 @@ char* cache_get(cache *cache, int key) {
 
 int cache_put(cache *cache, int key, char *data, size_t data_size) {
 
+    if(data_size > cache->max_object_size) {
+        return 0;
+    }
+
+    //Allocate heap memory
     cache_node* new_node = malloc(sizeof(cache_node));
 
     new_node->data = malloc(data_size);
 
+    //Copy the data
     memcpy(new_node->data, data, data_size);
 
     new_node->key = key;
@@ -63,12 +69,25 @@ int cache_put(cache *cache, int key, char *data, size_t data_size) {
     new_node->next = NULL;
     new_node->previous = NULL;
 
-    cache_append(cache, new_node);
+    cache->size += data_size;
+
+    cache_prepend(cache, new_node);
+
+    while(cache->size > cache->max_size) {
+        cache_remove(cache, cache->tail->key);
+    }
 
     return 1;
 }
 
-int cache_append(cache *cache, cache_node *node) {
+int cache_prepend(cache *cache, cache_node *node) {
+    if(cache->head == NULL) {
+        cache->head = node;
+        cache->tail = node;
+
+        return 1;
+    }
+
     cache->head->previous = node;
     node->next = cache->head;
     cache->head = node;
