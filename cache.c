@@ -52,7 +52,8 @@ char* cache_get(cache *cache, int key) {
 
 int cache_put(cache *cache, int key, char *data, size_t data_size) {
 
-    if(data_size > cache->max_object_size) {
+    if(data_size > cache->max_object_size &&
+        cache->size + data_size > cache->max_size) {
         return 0;
     }
 

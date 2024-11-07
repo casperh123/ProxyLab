@@ -118,13 +118,12 @@ void handle_request(struct request_scope *scope) {
     if (error_non_get(method)) { return; }
 
     int key = hash(uri);
-    cache_node* cache_hit = cache_get(scope->cache, key);
+    char* cache_hit = cache_get(scope->cache, key);
 
     if(cache_hit != NULL) {
         printf("\033[33mCACHE HIT:\033[0m %s\n", uri);
 
-        num_bytes = cache_hit->size;
-        num_bytes = write_all(client_fd, cache_hit->data, num_bytes);
+        num_bytes = write_all(client_fd, cache_hit, num_bytes);
 
         printf("\033[33mCACHE HIT:\033[0m Wrote some bytes to: %s\n", uri);
 
@@ -136,6 +135,7 @@ void handle_request(struct request_scope *scope) {
 
         /* Parse URI from GET request */
         parse_uri(uri, hostname, path, port);
+
 
         /* Set the request header */
         return_cd = set_request_header(request_hdr, hostname, path, port, client_fd);
@@ -155,6 +155,10 @@ void handle_request(struct request_scope *scope) {
             if (error_read_server(server_fd, num_bytes)) {
                 return;
             }
+
+            int url_hash = hash(uri);
+
+            cache_put(scope->cache, url_hash, buf, num_bytes);
 
             num_bytes = write_all(client_fd, buf, num_bytes);
 
