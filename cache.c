@@ -99,33 +99,33 @@ int cache_prepend(cache *cache, cache_node *node) {
 int cache_remove(cache* cache, int key)  {
 
     cache_node* current = cache->head;
-    cache_node* previous = NULL;
 
     while(current != NULL) {
+
         if(current->key == key) {
 
             if(current->previous == NULL && current->next == NULL) {
                 cache->head = NULL;
                 cache->tail = NULL;
             } else if (current->next == NULL) {
-                previous->next = NULL;
-                cache->tail = previous;
+                current->previous->next = NULL;
+                cache->tail = current->previous;
             } else if (current->previous == NULL) {
                 cache->head = current->next;
                 current->next->previous = NULL;
             } else {
-                current->next->previous = previous;
-                previous->next = current->next;
+                current->next->previous = current->previous;
+                current->previous->next = current->next;
             }
 
+            cache->size -= current->size;
+
+            free(current->data);
             free(current);
 
             return 0;
         }
-
-        previous = current;
         current = current->next;
     }
-
     return -1;
 }

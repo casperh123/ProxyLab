@@ -21,7 +21,6 @@ typedef struct cache {
 
 char* cache_get(cache *cache, int key);
 int cache_put(cache *cache, int key, char *data, size_t data_size);
-int cache_append(cache *cache, cache_node *node);
 int cache_prepend(cache *cache, cache_node *node);
 int cache_remove(cache *cache, int key);
 
